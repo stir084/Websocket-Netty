@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" >
+<!-- css from https://freefrontend.com/css-chats/ -->
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Montserrat'>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css'>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+<div class="container" style="width: 540px;">
+  <section class="chat">
+
+    <div id="chat" class="messages-chat" style="height: 620px;">
+    </div>
+    <div class="footer-chat">
+
+      <input id="opinion" type="text" class="write-message" onkeyup="enterkey()" placeholder="Type your message here">
+      <i class="icon send fa fa-paper-plane-o clickable" onclick="sendMessage()" aria-hidden="true"></i>
+    </div>
+  </section>
+</div>
+</body>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>
+<script th:inline="javascript">
+
+  const username = [[${name}]];
+
+  const websocket = new WebSocket("ws://localhost:8080/ws/chat");
+  websocket.onmessage = onMessage;
+  websocket.onopen = onOpen;
+  websocket.onclose = onClose;
+
+  let isSeeing = true;
+  document.addEventListener("visibilitychange", function() {
+    console.log(document.visibilityState);
+    if(document.visibilityState == "hidden"){
+      isSeeing = false;
+    }else{
+      isSeeing = true;
+    }
+  });
+
+  var newExcitingAlerts = (function () {
+    var oldTitle = document.title;
+    var msg = "★Message!★";
+    var timeoutId;
+    var blink = function() { document.title = document.title == msg ? ' ' : msg;
+      if(isSeeing == true){
+        clear();
+      }
+    };
+    var clear = function() {
+      clearInterval(timeoutId);
+      document.title = oldTitle;
+      window.onmousemove = null;
+      timeoutId = null;
+    };
+    return function () {
+      if (!timeoutId) {
+        timeoutId = setInterval(blink, 1000);
+      }
+    };
+  }());
+
+  setInterval(() => console.log(new Date()), 60000); //prevent chrome refresh
+
+  $(document).ready(function(){
+    $(".floating-chat").click();
+
+    $("#disconn").on("click", (e) => {
+      disconnect();
+    })
+
+    $("#button-send").on("click", (e) => {
+      send();
+    });
+  })
+
+  function enterkey(){
+    if (window.event.keyCode == 13) {
+      sendMessage();
+    }
+  }
+
+  function sendMessage(){
+    send();
+  }
+  function send(){
+    if($("#opinion").val() != ""){
+      websocket.send(username + ":" + $("#opinion").val());
+      $("#opinion").val('');
+    }
+  }
+
+  function onClose(evt) {
+    var str = username + ": has left the room";
+    websocket.send(str);
+  }
+
+  function onOpen(evt) {
+    var str = username + ": entered the room";
+    websocket.send(str);
+  }
+
+  let cachedTime;
+  let cachedSessionId;
+  let isLastChatFromMe;
+  function onMessage(msg) {
+    var data = msg.data;
+    var sessionId = null;
+    var message = null;
+    var arr = data.split(":");
+
+    for(var i=0; i<arr.length; i++){
+      console.log('arr[' + i + ']: ' + arr[i]);
+    }
+
+    var cur_session = username;
+
+    sessionId = arr[0];
+    message = arr[1];
+
+    console.log("sessionID : " + sessionId);
+    console.log("cur_session : " + cur_session);
+
+
+    if(message == " entered the room"){
+      message = sessionId + " entered the room 😀";
+    }
+
+    if(sessionId == cur_session){
+      var str = "<div class='message text-only'>";
+      str += "<div class='response'><p class='text'>"
+      str += message;
+      str += "</p></div></div>";
+      $("#chat").append(str);
+
+      isLastChatFromMe = true;
+    }
+    else{
+      if(isLastChatFromMe == true){
+        var str = "<div class='message'> <div class='photo you'></div>";
+        str += "<p class='text'>"
+        str += message;
+        str += "<p></div>";
+        $("#chat").append(str);
+
+
+      }else{
+        var str = "<div class='message text-only'>";
+        str += "<p class='text'>"
+        str += message;
+        str += "<p></div>";
+        $("#chat").append(str);
+      }
+      isLastChatFromMe = false;
+
+      if(isSeeing == false){
+        newExcitingAlerts();
+      }
+    }
+
+    cachedSessionId = sessionId;
+
+    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+  }
+</script>
+</html>

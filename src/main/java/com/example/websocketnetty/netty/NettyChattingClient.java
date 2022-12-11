@@ -1,4 +1,4 @@
-package com.example.websocketnetty;
+package com.example.websocketnetty.netty;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -7,29 +7,32 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 @Component
+@RequiredArgsConstructor
 public class NettyChattingClient {
     private Channel channel;
     private EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private final NettyChattingClientHandler nettyChattingClientHandler;
 
-    public void run() throws InterruptedException {
+    public void run() {
         SocketAddress address = new InetSocketAddress("127.0.0.1", 8888);
 
         try {
             Bootstrap bs = new Bootstrap();
             bs.group(workerGroup)
                     .channel(NioSocketChannel.class)
-                    .option(ChannelOption.SO_KEEPALIVE, true) //상대방의 상태를 확인하는 패킷을 전송
+                    .option(ChannelOption.SO_KEEPALIVE, true)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline p = ch.pipeline();
-                            p.addLast(new NettyChattingClientHandler());
+                            p.addLast(nettyChattingClientHandler);
                         }
                     });
 

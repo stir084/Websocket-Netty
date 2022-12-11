@@ -1,6 +1,5 @@
 package com.example.websocketnetty.controller;
 
-import com.example.websocketnetty.NettyChattingClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,11 +12,8 @@ import javax.servlet.http.HttpSession;
 @RequiredArgsConstructor
 public class ChattingController {
 
-    private final NettyChattingClient nettyChattingClient;
-
     @GetMapping("/")
     public String index(){
-
         return "error";
     }
 
@@ -27,15 +23,9 @@ public class ChattingController {
             model.addAttribute("name", "guest");
         }else if(id.equals("master")){
             model.addAttribute("name", "master");
-        }else if(id.equals("loose")){
-            model.addAttribute("name", "loose");
         }else {
             return "error";
         }
         return "chattingRoom";
-    }
-    @GetMapping("/test")
-    public void test(){
-        nettyChattingClient.sendToServer("하이");
     }
 }

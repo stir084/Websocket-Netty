@@ -1,5 +1,7 @@
 package com.example.websocketnetty;
 
+import com.example.websocketnetty.netty.NettyChattingClient;
+import com.example.websocketnetty.netty.NettyChattingServer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,9 +17,7 @@ public class TCPServer {
     @PostConstruct
     public void init() throws InterruptedException {
         nettyChattingServer.run();
-        System.out.println("헉");
         nettyChattingClient.run();
-        System.out.println("헉헉");
     }
 
     @PreDestroy
